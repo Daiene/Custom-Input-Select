@@ -20,13 +20,11 @@ document.addEventListener("DOMContentLoaded", function () {
   dropdown.addEventListener("click", function (e) {
     const target = e.target;
     const isOption = target.classList.contains("option");
-    const isDeleteIcon = target.classList.contains("bi-trash3");
+    const isDeleteIcon = target.classList.contains("fa-trash-can");
 
     if (isOption && !isDeleteIcon) {
       updateInput(target.textContent.trim());
-    }
-
-    if (isDeleteIcon) {
+    } else if (isDeleteIcon) {
       const confirmDelete = confirm(
         "Tem certeza que quer deletar essa categoria?"
       );
@@ -36,18 +34,18 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     }
 
-    insertCategoryInput.addEventListener("click", function (e) {
-      e.stopPropagation();
-    });
-
     closeDropdown();
   });
 
-  insertCategoryInput.addEventListener("input", function (e) {
+  insertCategoryInput.addEventListener("click", function (e) {
     e.stopPropagation();
-    if (!buttonCategory) {
-      createButton();
-    }
+
+    insertCategoryInput.addEventListener("input", function (e) {
+      e.stopPropagation();
+      if (!buttonCategory) {
+        createButton();
+      }
+    });
   });
 
   insertCategoryInput.addEventListener("keydown", function (e) {
@@ -84,7 +82,7 @@ document.addEventListener("DOMContentLoaded", function () {
       if (newCategoryValue !== "") {
         const newCategory = document.createElement("li");
         newCategory.className = "option";
-        newCategory.innerHTML = `${newCategoryValue} <span class="delete-icon"><i class="bi bi-trash3"></i></span>`;
+        newCategory.innerHTML = `${newCategoryValue} <span class="delete-icon"><i class="fas fa-trash-can"></i></span>`;
         dropdown.insertBefore(newCategory, insertCategoryInput.parentNode);
         insertCategoryInput.value = "";
         updateInput(newCategoryValue);

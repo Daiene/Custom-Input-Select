@@ -31,6 +31,16 @@ body {
   color: #f60000;
 }
 
+.dropdown li:hover > .delete-icon {
+    display: block;
+}
+
+.delete-icon {
+    float: right;
+    cursor: pointer;
+    display: none;
+}
+
 .inputSelect {
   position: relative;
 }
