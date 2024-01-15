@@ -3,7 +3,7 @@ import { shallowMerge as merge } from './helpers.js'
 
 export default class CustomSelect {
 
-    constructor(inputElement, options) {
+    constructor({inputElement, options = {}}) {
         this.settings = merge(settings, options);
         this.inputElement = inputElement;
         this.insertCategoryInput = null;
@@ -11,8 +11,10 @@ export default class CustomSelect {
         this.categoryButton = null;
         this.wrapper = null;
         this.inputWrapper = null;
+        this.events = [];
 
         this.build();
+        this.loadEvents();
     }
 
     loadEvents() {
@@ -23,6 +25,14 @@ export default class CustomSelect {
         });
 
         this.addEvent(this.wrapper, 'click', (e) => {
+
+            if (e.target.hasAttribute('data-custom-select')) {
+                console.log(this.dropdown);
+                this.dropdown.classList.toggle("d-none");
+                this.removeButton();
+                e.stopPropagation();
+                return;
+            }
 
             if (e.target.hasAttribute('data-dropdown-category-button')) {
                 const categoryValue = this.insertCategoryInput.value.trim();
@@ -63,13 +73,6 @@ export default class CustomSelect {
             
                 return this.closeDropdown();
             }
-
-        }) 
-
-        this.addEvent(this.inputField, "click", (e) => {
-            this.dropdown.classList.toggle("d-none");
-            this.removeButton();
-            e.stopPropagation();
         });
 
         this.addEvent(this.insertCategoryInput, "click", (e) => {
@@ -118,7 +121,7 @@ export default class CustomSelect {
     createWrapper() {
         const wrapper = document.createElement('div');
 
-        wrapper.setAttribute('data-custom-select');
+        wrapper.setAttribute('data-custom-select', '');
 
         return wrapper;
     }
@@ -133,19 +136,19 @@ export default class CustomSelect {
             </div>
         `;
 
-        return this.parse(inputWrapper);
+        return CustomSelect.parse(inputWrapper);
     }
 
     createCategoryButton() {
         this.categoryButton = document.createElement("button");
-        this.categoryButton.setAttribute = "data-dropdown-category-button";
+        this.categoryButton.setAttribute("data-dropdown-category-button", '');
         this.categoryButton.textContent = "Adicionar";
 
         this.categoryButton.addEventListener("click", function () {
           
         });
 
-        return categoryButton;
+        return this.categoryButton;
       }
 
     createInsertCategoryinput() {
@@ -156,33 +159,35 @@ export default class CustomSelect {
             </li>
         `;
 
-        return this.parse(insertCategoryInputTemplate);
+        return CustomSelect.parse(insertCategoryInputTemplate);
     }
 
     createDropdownItem(item) {
         const dropdownItemTemplate = `
-            <li class="option">
-                ${item}<span class="delete-icon"><i class="bi bi-trash3"></i></span>
+            <li data-option class="option">
+                <span data-action-delete class="delete-icon"><i class="bi bi-trash3"></i></span>
             </li>
         `;
 
-        const dropdownItem = this.parse(dropdownItemTemplate);
+        const dropdownItem = CustomSelect.parse(dropdownItemTemplate);
+
+        dropdownItem.prepend(item);
 
         return dropdownItem;
     }
 
     createDropdown() {
-        const predefinedList = this.settings.predefinedList.map(this.createDropdownItem);
-
         const dropdownTemplate = `
-            <ul data-dropdown class="dropdown d-none">
-                ${predefinedList}
-                <li class="insert-category"><i class="bi bi-plus-lg"></i><input type="text"
-                    placeholder="Adicione uma nova categoria"></li>
-            </ul>
+            <ul data-dropdown class="dropdown d-none"></ul>
         `;
 
-        return this.parse(dropdownTemplate);
+        const dropdown = CustomSelect.parse(dropdownTemplate);
+
+        this.settings.predefinedList.forEach(item => {
+            dropdown.append(this.createDropdownItem(item))
+        });
+        
+        return dropdown;
     }
 
     getParent() {
@@ -200,7 +205,7 @@ export default class CustomSelect {
         }
     }
 
-    parse(templateString) {
+    static parse(templateString) {
         const root = document.createElement('div');
         root.insertAdjacentHTML('afterbegin', templateString);
         return root.children[0];
@@ -215,10 +220,14 @@ export default class CustomSelect {
 
         this.getParent().insertBefore(this.wrapper, this.inputElement);
 
-        this.dropdown.append(insertCategoryInput);
+        this.dropdown.append(this.insertCategoryInput);
         this.inputWrapper.prepend(this.inputElement);
 
         this.wrapper.append(this.inputWrapper);
-        this.inputWrapper.append(this.inputWrapper);
+        this.wrapper.append(this.dropdown);
+    }
+
+    static create({inputElement, options}) {
+        return new CustomSelect({inputElement, options});
     }
 }

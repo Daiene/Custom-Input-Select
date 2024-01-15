@@ -1,8 +1,10 @@
+import CustomSelect from "./custom-select.js";
+
 document.addEventListener("DOMContentLoaded", function () {
-    const inputField = document.getElementById("inputField");
-    const dropdown = document.getElementById("dropdown");
-    const insertCategoryInput = document.querySelector(".insert-category input");
-    let buttonCategory;
-  
+    const inputElement = document.querySelector("[data-custom-select]");
+    
+    CustomSelect.create({
+      inputElement,
+    });
   });
   
