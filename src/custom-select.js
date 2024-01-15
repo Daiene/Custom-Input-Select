@@ -18,25 +18,50 @@ export default class CustomSelect {
     loadEvents() {
         this.addEvent(document, "click", (e) => {
             if (e.target.closest("[data-dropdown]") === null) {
-              closeDropdown();
+              this.closeDropdown();
             }
         });
 
         this.addEvent(this.wrapper, 'click', (e) => {
 
-            if (e.target.dataset['data-dropdown-category-button']) {
-                const newCategoryValue = this.insertCategoryInput.value.trim();
-                if (newCategoryValue !== "") {
-                    
-                  const newCategory = this.createDropdownItem(newCategoryValue);
-
-                  newCategory.className = "option";
-
-                  this.dropdown.insertBefore(newCategory, this.insertCategoryInput);
-                  this.insertCategoryInput.value = "";
-                  this.updateInput(newCategoryValue);
-                  this.categoryButton.style.display = "none";
+            if (e.target.hasAttribute('data-dropdown-category-button')) {
+                const categoryValue = this.insertCategoryInput.value.trim();
+               
+                if (categoryValue === "") {
+                    return;
                 }
+
+                const category = this.createDropdownItem(categoryValue);
+
+                this.dropdown.insertBefore(category, this.insertCategoryInput);
+
+                this.inputField.value = categoryValue;
+                this.insertCategoryInput.value = "";
+                this.categoryButton.style.display = "none";
+
+                return;
+            }
+
+            if (e.target.hasAttribute('data-dropdown')) {
+                const target = e.target;
+                const isOption = target.classList.contains("option");
+                const isDeleteIcon = target.classList.contains("bi-trash3");
+            
+                if (isOption && !isDeleteIcon) {
+                  this.inputField.value = target.textContent.trim();
+                } else if (isDeleteIcon) {
+                    
+                  const confirmDelete = confirm(
+                    "Tem certeza que quer deletar essa categoria?"
+                  );
+
+                  if (confirmDelete) {
+                    target.closest(".option").remove();
+                    this.inputField.value = null;
+                  }
+                }
+            
+                return this.closeDropdown();
             }
 
         }) 
@@ -45,26 +70,6 @@ export default class CustomSelect {
             this.dropdown.classList.toggle("d-none");
             this.removeButton();
             e.stopPropagation();
-        });
-
-        this.addEvent(this.dropdown, 'click', (e) => {
-            const target = e.target;
-            const isOption = target.classList.contains("option");
-            const isDeleteIcon = target.classList.contains("bi-trash3");
-        
-            if (isOption && !isDeleteIcon) {
-              this.updateInput(target.textContent.trim());
-            } else if (isDeleteIcon) {
-              const confirmDelete = confirm(
-                "Tem certeza que quer deletar essa categoria?"
-              );
-              if (confirmDelete) {
-                target.closest(".option").remove();
-                this.inputField.value = null;
-              }
-            }
-        
-            this.closeDropdown();
         });
 
         this.addEvent(this.insertCategoryInput, "click", (e) => {
@@ -145,7 +150,7 @@ export default class CustomSelect {
 
     createInsertCategoryinput() {
         const insertCategoryInputTemplate = `
-            <li class="insert-category">
+            <li data-insert-category class="insert-category">
                 <i class="bi bi-plus-lg"></i>
                 <input type="text" placeholder="Adicione uma nova categoria">
             </li>
@@ -193,10 +198,6 @@ export default class CustomSelect {
             this.cateforyButton.remove();
             this.cateforyButton = null;
         }
-    }
-
-    updateInput(value) {
-        this.inputField.value = value;
     }
 
     parse(templateString) {
