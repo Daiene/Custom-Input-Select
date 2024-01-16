@@ -7,108 +7,73 @@ export default class CustomSelect {
         this.settings = merge(settings, options);
         this.inputElement = inputElement;
         this.insertCategoryInput = null;
+        this.insertCategoryButton = null;
         this.dropdown = null;
-        this.categoryButton = null;
         this.wrapper = null;
         this.inputWrapper = null;
-        this.events = [];
 
         this.build();
         this.loadEvents();
     }
 
     loadEvents() {
-        this.addEvent(document, "click", (e) => {
-            if (e.target.closest("[data-dropdown]") === null) {
-              this.closeDropdown();
+        document.addEventListener('click', (event) => {
+            if (!event.target.closest('[data-custom-select]')) {
+                this.dropdown.style.display = 'none';
             }
         });
 
-        this.addEvent(this.wrapper, 'click', (e) => {
+        this.wrapper.addEventListener('input', (event) => {
 
-            if (e.target.hasAttribute('data-custom-select')) {
-                console.log(this.dropdown);
-                this.dropdown.classList.toggle("d-none");
-                this.removeButton();
-                e.stopPropagation();
+            if (event.target.hasAttribute('data-insert-category-input')) {
+                const value = event.target.value;
+                this.insertCategoryButton.style.display = value.length > 0 
+                    ? 'block' 
+                    : 'none';
                 return;
             }
 
-            if (e.target.hasAttribute('data-dropdown-category-button')) {
-                const categoryValue = this.insertCategoryInput.value.trim();
-               
-                if (categoryValue === "") {
-                    return;
-                }
+        });
 
-                const category = this.createDropdownItem(categoryValue);
+        this.wrapper.addEventListener('click', (event) => {
 
-                this.dropdown.insertBefore(category, this.insertCategoryInput);
+            
+            if (event.target.hasAttribute('data-option')) {
+                const optionValue = event.target.dataset.optionValue;
+                this.inputElement.value = optionValue;
+                this.dropdown.style.display = "none";
+                return;
+            }
 
-                this.inputField.value = categoryValue;
-                this.insertCategoryInput.value = "";
-                this.categoryButton.style.display = "none";
+            if (event.target.hasAttribute('data-custom-select')) {
+                this.dropdown.style.display = "block";
+                return;
+            }
+
+            if (event.target.hasAttribute('data-insert-category-button')) {
+                const value = this.insertCategoryInput.value;
+                
+                if (!value) return;
+
+                this.addDropdownItem(value);
+                this.insertCategoryInput.value = '';
 
                 return;
             }
 
-            if (e.target.hasAttribute('data-dropdown')) {
-                const target = e.target;
-                const isOption = target.classList.contains("option");
-                const isDeleteIcon = target.classList.contains("bi-trash3");
-            
-                if (isOption && !isDeleteIcon) {
-                  this.inputField.value = target.textContent.trim();
-                } else if (isDeleteIcon) {
-                    
-                  const confirmDelete = confirm(
-                    "Tem certeza que quer deletar essa categoria?"
-                  );
+            if (event.target.closest('[data-action-delete]')) {
+                const optionValue = event.target.parentNode.dataset.optionValue;
 
-                  if (confirmDelete) {
-                    target.closest(".option").remove();
-                    this.inputField.value = null;
-                  }
+                if (this.inputElement.value === optionValue) {
+                    this.inputElement.value = "";
                 }
-            
-                return this.closeDropdown();
+
+                event.target.parentNode.remove();
+                event.stopPropagation();
+
+                return;
             }
-        });
-
-        this.addEvent(this.insertCategoryInput, "click", (e) => {
-            e.stopPropagation();
-        
-            this.insertCategoryInput.addEventListener("input", (e) => {
-              e.stopPropagation();
-
-              if (!this.categoryButton) {
-                this.createButton();
-              }
-            });
-        });
-
-        this.addEvent(this.insertCategoryInput, "keydown", function (e) {
-            if (e.key === "Enter" && this.categoryButton) {
-                this.categoryButton.click();
-            }
-        });
-
-        this.addEvent(this.inputElement, "input", () => {
-            const filterValue = this.inputField.value.trim().toLowerCase();
-            const options = this.dropdown.querySelectorAll(".option");
-
-            options.forEach((option) => {
-              const optionText = option.textContent.trim().toLowerCase();
-              const display = optionText.includes(filterValue) ? "block" : "none";
-              option.style.display = display;
-            });
-        });
-    }
-
-    addEvent(target, event, fn) {
-        target.addEventListener(event, fn);
-        this.events = [...this.events, [target, event, fn]];
-        return this;
+        })
     }
 
     destroy() {
@@ -120,9 +85,7 @@ export default class CustomSelect {
 
     createWrapper() {
         const wrapper = document.createElement('div');
-
         wrapper.setAttribute('data-custom-select', '');
-
         return wrapper;
     }
 
@@ -131,7 +94,7 @@ export default class CustomSelect {
             <div data-input-select class="inputSelect w-100 d-flex">
                 <!-- add inputElement here -->
                 <div class="select-icon">
-                    <i class="bi bi-chevron-down"></i>
+                    <i style="pointer-events: none;" class="bi bi-chevron-down"></i>
                 </div>
             </div>
         `;
@@ -139,49 +102,59 @@ export default class CustomSelect {
         return CustomSelect.parse(inputWrapper);
     }
 
-    createCategoryButton() {
-        this.categoryButton = document.createElement("button");
-        this.categoryButton.setAttribute("data-dropdown-category-button", '');
-        this.categoryButton.textContent = "Adicionar";
-
-        this.categoryButton.addEventListener("click", function () {
-          
-        });
-
-        return this.categoryButton;
-      }
-
-    createInsertCategoryinput() {
+    createInsertCategory() {
         const insertCategoryInputTemplate = `
             <li data-insert-category class="insert-category">
                 <i class="bi bi-plus-lg"></i>
-                <input type="text" placeholder="Adicione uma nova categoria">
             </li>
         `;
 
         return CustomSelect.parse(insertCategoryInputTemplate);
     }
 
-    createDropdownItem(item) {
+    createInsertCategoryInput() {
+        const insertCategoryInputTemplate = `
+            <input data-insert-category-input type="text" placeholder="Adicione uma nova categoria">
+        `;
+
+        return CustomSelect.parse(insertCategoryInputTemplate);
+    }
+
+    createInsertCategoryButton() {
+        const insertCategoryButton = document.createElement('button');
+        insertCategoryButton.setAttribute('data-insert-category-button', '');
+        insertCategoryButton.style.display = "none";
+        insertCategoryButton.textContent = "Adicionar";
+        return insertCategoryButton;
+    }
+
+    addDropdownItem(item) {
+        const dropdownItem = this.createDropdownItem(item);
+        this.dropdown.prepend(dropdownItem);
+    }
+
+    createDropdownItem(value) {
         const dropdownItemTemplate = `
-            <li data-option class="option">
-                <span data-action-delete class="delete-icon"><i class="bi bi-trash3"></i></span>
+            <li data-option data-option-value=${value} class="option">
+                ${value}
+                <span data-action-delete class="delete-icon">
+                    <i style="pointer-events: none;" class="bi bi-trash3"></i>
+                </span>
             </li>
         `;
 
-        const dropdownItem = CustomSelect.parse(dropdownItemTemplate);
-
-        dropdownItem.prepend(item);
-
-        return dropdownItem;
+        return CustomSelect.parse(dropdownItemTemplate);
     }
 
     createDropdown() {
+        // d-none
         const dropdownTemplate = `
-            <ul data-dropdown class="dropdown d-none"></ul>
+            <ul data-dropdown class="dropdown"></ul>
         `;
 
         const dropdown = CustomSelect.parse(dropdownTemplate);
+
+        dropdown.style.display = "none";
 
         this.settings.predefinedList.forEach(item => {
             dropdown.append(this.createDropdownItem(item))
@@ -214,13 +187,17 @@ export default class CustomSelect {
     build() {
         this.wrapper = this.createWrapper();
         this.inputWrapper = this.createInputWrapper();
-        this.insertCategoryInput = this.createInsertCategoryinput();
+        this.insertCategory = this.createInsertCategory();
+        this.insertCategoryInput = this.createInsertCategoryInput();
+        this.insertCategoryButton = this.createInsertCategoryButton();
         this.dropdown = this.createDropdown();
-        this.categoryButton = this.createCategoryButton();
 
         this.getParent().insertBefore(this.wrapper, this.inputElement);
 
-        this.dropdown.append(this.insertCategoryInput);
+        this.insertCategory.append(this.insertCategoryInput);
+        this.insertCategory.append(this.insertCategoryButton);
+
+        this.dropdown.append(this.insertCategory);
         this.inputWrapper.prepend(this.inputElement);
 
         this.wrapper.append(this.inputWrapper);

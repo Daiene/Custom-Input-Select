@@ -91,7 +91,7 @@ body {
   outline: 0;
 }
 
-[data-button-category] {
+[data-insert-category-button] {
   border: none;
   background: #054f77;
   color: #ffffff;
@@ -100,6 +100,6 @@ body {
   border-radius: 5px;
 }
 
-[data-button-category]:hover {
+[data-insert-category-button]:hover {
   background: #0047ab;
 }
