@@ -1,4 +1,4 @@
-import CustomSelect from "./custom-select.js";
+import CustomSelect, { EVENTS } from "./custom-select.js";
 
 document.addEventListener("DOMContentLoaded", function () {
     const selectLang = document.querySelector("[data-select='linguagens']");
@@ -6,7 +6,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const selectCountry = document.querySelector("[data-select='paises']");
     const selectFruit = document.querySelector("[data-select='frutas']");
     
-    CustomSelect.create({ 
+    const CSLang = CustomSelect.create({ 
       inputElement: selectLang,
       options: {
         predefinedList: [
@@ -15,8 +15,14 @@ document.addEventListener("DOMContentLoaded", function () {
           'Espanhol',
           'Alemão',
           'Irlandês',
-        ]
+        ],
+        confirmationText: (lang) => {
+          return `Tem certeza que quer deletar esta língua? ${lang}`;
+        }
       }
+    })
+    .on(EVENTS.ADD_ITEM, (event) => {
+      console.log(event);
     });
 
     CustomSelect.create({ 
@@ -28,7 +34,10 @@ document.addEventListener("DOMContentLoaded", function () {
           'Pagamento Realizado',
           'Em Análise',
           'Expedido',
-        ]
+        ],
+        confirmationText: (category) => {
+          return `Tem certeza que quer deletar esta categoria? ${category}`;
+        }
       }
     });
 
@@ -41,7 +50,10 @@ document.addEventListener("DOMContentLoaded", function () {
           'França',
           'Irlanda',
           'Noruega',
-        ]
+        ],
+        confirmationText: (country) => {
+          return `Tem certeza que quer deletar este país? ${country}`;
+        }
       }
     });
 
@@ -54,8 +66,34 @@ document.addEventListener("DOMContentLoaded", function () {
           'Uva',
           'Pêra',
           'Tomate',
-        ]
+        ],
+        confirmationText: (fruit) => {
+          return `Tem certeza que quer deletar esta fruta? ${fruit}`;
+        }
       }
     });
+
+    setTimeout(() => {
+      CSLang.destroy(); 
+      console.log('destroyed');
+      CustomSelect.create({ 
+      inputElement: selectLang,
+      options: {
+        predefinedList: [
+          'Português',
+          'Inglês',
+          'Espanhol',
+          'Alemão',
+          'Irlandês',
+        ],
+        confirmationText: (lang) => {
+          return `Tem certeza que quer deletar esta língua? ${lang}`;
+        }
+      }
+    });
+    console.log('created')
+  }, 3000);
+
   });
   
+

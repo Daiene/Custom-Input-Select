@@ -1,6 +1,14 @@
 import { settings } from './defaults.js'
 import { shallowMerge as merge } from './helpers.js'
 
+export const EVENTS = {
+    ADD_ITEM: 'customselect:add:item',
+    DELETE_ITEM: 'customselect:add:item',
+    FOCUS_SELECT: 'customselect:focus:select',
+    CLICK_OUTSIDE: 'customselect:click:outside',
+    MOUNTED: 'customselect:mounted',
+};
+
 export default class CustomSelect {
 
     constructor({inputElement, options = {}}) {
@@ -11,28 +19,37 @@ export default class CustomSelect {
         this.dropdown = null;
         this.wrapper = null;
         this.inputWrapper = null;
+        this.events = [];
 
         this.build();
         this.loadEvents();
+        this.dispatch(EVENTS.MOUNTED, { self: this });
     }
 
     loadEvents() {
-        document.addEventListener('click', (event) => {
+        this.addEvent(document,'click', (event) => {
             if (!event.target.closest('[data-custom-select]')) {
                 this.dropdown.style.display = 'none';
+                this.dispatch(EVENTS.CLICK_OUTSIDE);
             }
         });
 
-        this.wrapper.addEventListener('input', (event) => {
+        this.addEvent(this.wrapper, 'input', (event) => {
 
             if (event.target.hasAttribute('data-custom-select')) {
                 const hasString = (text) => text.includes(event.target.dataset.optionValue.toLowerCase());
 
-                return this.dropdown.querySelectorAll('[data-option]').forEach((option) => {
+                this.dropdown.querySelectorAll('[data-option]').forEach((option) => {
                     option.style.display = hasString(option.textContent.toLowerCase()) 
                         ? "block" 
                         : 'none';
                 });
+
+                return this.dispatch(EVENTS.FOCUS_SELECT, {
+                    dropdownStatus: hasString(option.textContent.toLowerCase())
+                        ? "opened" 
+                        : "closed"
+                })
             }
 
             if (event.target.hasAttribute('data-insert-category-input')) {
@@ -45,7 +62,7 @@ export default class CustomSelect {
 
         });
 
-        this.wrapper.addEventListener('click', (event) => {
+        this.addEvent(this.wrapper, 'click', (event) => {
 
             if (event.target.hasAttribute('data-option')) {
                 const optionValue = event.target.dataset.optionValue;
@@ -76,9 +93,7 @@ export default class CustomSelect {
             if (event.target.closest('[data-action-delete]')) {
                 const optionValue = event.target.parentNode.dataset.optionValue;
 
-                const canDelete = confirm(
-                    "Tem certeza que quer deletar esse item?"
-                );
+                const canDelete = confirm(this.settings.confirmationText(optionValue));
 
                 if (!canDelete) return;
 
@@ -87,33 +102,67 @@ export default class CustomSelect {
                 }
 
                 event.target.parentNode.remove();
+
+                this.dispatch(EVENTS.DELETE_ITEM, { value: optionValue });
+
                 event.stopPropagation();
 
                 return;
             }
         });
 
-        this.wrapper.addEventListener('keydown', (event) => {
+        
+
+        this.addEvent(this.wrapper, 'keydown', (event) => {
             if (event.target.hasAttribute('data-insert-category-input')) {
                 if (event.key !== 'Enter') return;
 
                 const value = this.insertCategoryInput.value;
 
                 if (!value) return;
+                if (this.verifyIfExists(value)) {
+                    return alert(this.settings.alertText(value));
+                }
 
                 this.addDropdownItem(value);
                 this.insertCategoryInput.value = '';
+
+                this.dispatch(EVENTS.ADD_ITEM, { value });
 
                 return;
             }
         });
     }
 
-    destroy() {
-        this.events.forEach(
-            ([target, event, fn]) => target.removeEventListener(event, fn)
-        );
+    addEvent(target, event, fn) {
+        this.events = [...(this.events || []), [target, event, fn]];
+        target.addEventListener(event, fn);
+    }
+
+    verifyIfExists(value) {
+        return Array.from(this.dropdown.querySelectorAll('[data-option]')).find((item) => {
+            return item.dataset.optionValue.toLowerCase() === value.toLowerCase();
+        });
+    }
+
+    dispatch(event, args = {}) {
+        document.dispatchEvent(new CustomEvent(event, { detail: { ...args } }));
         return this;
+    }
+
+    on(event, fn) {
+        document.addEventListener(event, fn);
+        return this;
+    }
+
+    destroy() {
+        this.events.forEach(([target, event, fn]) => {
+            target.removeEventListener(event, fn);
+        });
+
+        const parent = this.getParent(this.wrapper);
+        parent.insertBefore(this.inputElement, this.wrapper);
+        this.wrapper.remove();
     }
 
     createWrapper() {
@@ -180,7 +229,6 @@ export default class CustomSelect {
     }
 
     createDropdown() {
-        // d-none
         const dropdownTemplate = `
             <ul data-dropdown class="dropdown"></ul>
         `;
@@ -196,8 +244,8 @@ export default class CustomSelect {
         return dropdown;
     }
 
-    getParent() {
-       return this.inputElement.parentNode;
+    getParent(target = this.inputElement) {
+       return target.parentNode;
     }
 
     closeDropdown() {
