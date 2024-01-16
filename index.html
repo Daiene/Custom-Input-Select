@@ -16,31 +16,44 @@
     integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"
     defer></script>
 
-  <script src="script.js" defer></script>
+  <script src="./src/index.js" type="module" defer></script>
 </head>
 
 <body>
   <div class="p-5 w-100">
     <label class="form-label">Categoria <span>*</span></label>
-    <div class="custom-select w-25" id="customSelect">
-      <div class="inputSelect w-100 d-flex">
-        <input type="text" class="w-100 py-3 px-4" id="inputField" placeholder="Escolha a categoria">
-        <div class="select-icon">
-          <i class="bi bi-chevron-down"></i>
-        </div>
-      </div>
-      <ul id="dropdown" class="dropdown d-none">
-        <li class="option">HTML <span class="delete-icon"><i class="bi bi-trash3"></i></span></li>
-        <li class="option">CSS <span class="delete-icon"><i class="bi bi-trash3"></i></span></li>
-        <li class="option">JavaScript <span class="delete-icon"><i class="bi bi-trash3"></i></span></li>
-        <li class="option">Python <span class="delete-icon"><i class="bi bi-trash3"></i></span></li>
-        <li class="option">Java <span class="delete-icon"><i class="bi bi-trash3"></i></span></li>
-        <li class="insert-category"><i class="bi bi-plus-lg"></i><input type="text"
-            placeholder="Adicione uma nova categoria"></li>
-      </ul>
-    </div>
-    <div class="messageError d-none fw-bold mt-2" id="categoryError">A categoria do post é obrigatória.</div>
-  </div>
+    
+    <input 
+      data-select="linguagens"
+      type="text" 
+      class="w-100 py-3 px-4" 
+      id="inputField" 
+      placeholder="Escolha a linguagem"
+    >
+
+    <input 
+      data-select="categorias"
+      type="text" 
+      class="w-100 py-3 px-4" 
+      id="inputField" 
+      placeholder="Escolha a categoria"
+    >
+
+    <input 
+      data-select="paises"
+      type="text" 
+      class="w-100 py-3 px-4" 
+      id="inputField" 
+      placeholder="Escolha o país"
+    >
+
+    <input  
+      data-select="frutas"
+      type="text" 
+      class="w-100 py-3 px-4" 
+      id="inputField" 
+      placeholder="Escolha a fruta"
+    >
 
 </body>
 

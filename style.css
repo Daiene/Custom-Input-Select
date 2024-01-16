@@ -91,7 +91,7 @@ body {
   outline: 0;
 }
 
-#buttonCategory {
+[data-insert-category-button] {
   border: none;
   background: #054f77;
   color: #ffffff;
@@ -100,6 +100,6 @@ body {
   border-radius: 5px;
 }
 
-#buttonCategory:hover {
+[data-insert-category-button]:hover {
   background: #0047ab;
 }
