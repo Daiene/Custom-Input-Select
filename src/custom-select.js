@@ -25,6 +25,16 @@ export default class CustomSelect {
 
         this.wrapper.addEventListener('input', (event) => {
 
+            if (event.target.hasAttribute('data-custom-select')) {
+                const hasString = (text) => text.includes(event.target.dataset.optionValue.toLowerCase());
+
+                return this.dropdown.querySelectorAll('[data-option]').forEach((option) => {
+                    option.style.display = hasString(option.textContent.toLowerCase()) 
+                        ? "block" 
+                        : 'none';
+                });
+            }
+
             if (event.target.hasAttribute('data-insert-category-input')) {
                 const value = event.target.value;
                 this.insertCategoryButton.style.display = value.length > 0 
@@ -37,7 +47,6 @@ export default class CustomSelect {
 
         this.wrapper.addEventListener('click', (event) => {
 
-            
             if (event.target.hasAttribute('data-option')) {
                 const optionValue = event.target.dataset.optionValue;
                 this.inputElement.value = optionValue;
@@ -46,7 +55,10 @@ export default class CustomSelect {
             }
 
             if (event.target.hasAttribute('data-custom-select')) {
-                this.dropdown.style.display = "block";
+                console.log();
+                this.dropdown.style.display = this.dropdown.style.display === "block"
+                    ? "none"
+                    : "block";
                 return;
             }
 
@@ -73,13 +85,28 @@ export default class CustomSelect {
 
                 return;
             }
-        })
+        });
+
+        this.wrapper.addEventListener('keydown', (event) => {
+            if (event.target.hasAttribute('data-insert-category-input')) {
+                if (event.key !== 'Enter') return;
+
+                const value = this.insertCategoryInput.value;
+
+                if (!value) return;
+
+                this.addDropdownItem(value);
+                this.insertCategoryInput.value = '';
+
+                return;
+            }
+        });
     }
 
     destroy() {
-        this.events.forEach(([target, event, fn]) => {
-            target.removeEventListener(event, fn);
-        });
+        this.events.forEach(
+            ([target, event, fn]) => target.removeEventListener(event, fn)
+        );
         return this;
     }
 
@@ -135,7 +162,7 @@ export default class CustomSelect {
 
     createDropdownItem(value) {
         const dropdownItemTemplate = `
-            <li data-option data-option-value=${value} class="option">
+            <li data-option data-option-value="${value}" class="option">
                 ${value}
                 <span data-action-delete class="delete-icon">
                     <i style="pointer-events: none;" class="bi bi-trash3"></i>
@@ -198,6 +225,9 @@ export default class CustomSelect {
         this.insertCategory.append(this.insertCategoryButton);
 
         this.dropdown.append(this.insertCategory);
+
+        this.inputElement.setAttribute('data-custom-select', '');
+
         this.inputWrapper.prepend(this.inputElement);
 
         this.wrapper.append(this.inputWrapper);
