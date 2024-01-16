@@ -76,6 +76,12 @@ export default class CustomSelect {
             if (event.target.closest('[data-action-delete]')) {
                 const optionValue = event.target.parentNode.dataset.optionValue;
 
+                const canDelete = confirm(
+                    "Tem certeza que quer deletar esse item?"
+                );
+
+                if (!canDelete) return;
+
                 if (this.inputElement.value === optionValue) {
                     this.inputElement.value = "";
                 }
